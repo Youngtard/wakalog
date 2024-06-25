@@ -82,82 +82,6 @@ func main() {
 		}
 	}
 
-	// wakatimeAccessToken, err := zal.Get("wakatime:access_token", "")
-
-	// if err != nil {
-	// 	log.Fatalf("Error retrieiving wakatime token: %v", err)
-	// }
-
-	// if wakatimeAccessToken == "" {
-	// 	err = wakatime.StartAuthentication(ctx, &wakatimeAccessToken)
-
-	// 	if err != nil {
-	// 		log.Fatalf("Error authenticating with wakatime: %v", err)
-	// 	}
-
-	// 	err = wakatime.StoreAccessToken(wakatimeAccessToken)
-
-	// 	if err != nil {
-
-	// 		log.Fatalf("Error storing wakatime token: %v", err)
-
-	// 	}
-	// }
-
-	// TODO remove
-	// fmt.Println(wakatimeAccessToken)
-
-	// writeRange := "FEB!C28"
-
-	// valuesRequest := &sheets.BatchUpdateValuesRequest{
-	// 	ValueInputOption: "RAW",
-	// }
-
-	// var valueRange sheets.ValueRange
-
-	// data := []interface{}{"Two"}
-	// valueRange.Values = append(valueRange.Values, data)
-	// valueRange.Range = writeRange
-
-	// valuesRequest.Data = append(valuesRequest.Data, &valueRange)
-
-	// _, err = srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, valuesRequest).Do()
-
-	// if err != nil {
-	// 	log.Fatalf("Unable to write data on sheet: %v", err)
-	// }
-
-	// two
-	// valuesRequest := &sheets.BatchUpdateSpreadsheetRequest{
-	// 	Requests: []*sheets.Request{{FindReplace: &sheets.FindReplaceRequest{Find: "Femi Sotonwa", AllSheets: false, SheetId: 1354509578}}},
-	// }
-
-	// var valueRange sheets.ValueRange
-
-	// data := []interface{}{"Two"}
-	// valueRange.Values = append(valueRange.Values, data)
-	// valueRange.Range = writeRange
-
-	// valuesRequest.Data = append(valuesRequest.Data, &valueRange)
-
-	// resp, err := srv.Spreadsheets.BatchUpdate(spreadsheetId, valuesRequest).Do()
-
-	// if err != nil {
-	// 	log.Fatalf("Unable to write data on sheet: %v", err)
-	// }
-
-	// if len(resp.Replies) == 0 {
-	// 	fmt.Println("No data found.")
-	// } else {
-	// 	for _, row := range resp.Replies {
-
-	// 		m, _ := row.MarshalJSON()
-	// 		fmt.Printf(string(m))
-	// 	}
-	// }
-
-	// currentMonth := time.Now().Month()
-
 	now := time.Now()
 
 	year, week := now.ISOWeek()
@@ -177,18 +101,8 @@ func main() {
 		relevantWeekOffset = 1
 	}
 
-	fmt.Println(dayOfWeek)
-	// fmt.Println(now.ISOWeek())
-
 	startDate := timex.WeekStart(year, week-relevantWeekOffset)
 	endDate := startDate.AddDate(0, 0, 4)
-
-	fmt.Println(startDate)
-	fmt.Println(endDate)
-
-	// var wakatimeAccessToken string
-
-	// wakatime.GetccessToken(&wakatimeAccessToken, ring)
 
 	hc := httpclient.NewClient(nil).WithAuthToken(wakatimeAccessToken)
 
@@ -196,13 +110,9 @@ func main() {
 
 	summaries, err := wc.GetSummaries(ctx, startDate, endDate)
 
-	fmt.Println(wakatimeAccessToken)
-
 	if err != nil {
 		log.Fatalf("Error getting summaries: %v", err)
 	}
-
-	fmt.Println(summaries.DailyAverage.Text)
 
 	engineersRange := "FEB!B:B"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, engineersRange).MajorDimension("COLUMNS").Do()
