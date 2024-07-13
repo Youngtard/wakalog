@@ -84,7 +84,7 @@ func main() {
 
 	now := time.Now()
 
-	year, week := now.ISOWeek()
+	currentYear, currentWeek := now.ISOWeek()
 
 	dayOfWeek := int(now.Weekday())
 
@@ -101,7 +101,9 @@ func main() {
 		relevantWeekOffset = 1
 	}
 
-	startDate := timex.WeekStart(year, week-relevantWeekOffset)
+	relevantWeek := currentWeek - relevantWeekOffset
+
+	startDate := timex.WeekStart(currentYear, relevantWeek)
 	endDate := startDate.AddDate(0, 0, 4)
 
 	hc := httpclient.NewClient(nil).WithAuthToken(wakatimeAccessToken)
@@ -140,7 +142,15 @@ func main() {
 		}
 	}
 
-	writeRange := fmt.Sprintf("JUNE!C%d", rowIndex)
+	firstDayOfCurrentMonth := time.Date(now.Year(), now.Month(), 1, 1, 1, 1, 1, time.UTC)
+	_, firstDayOfCurrentMonthWeek := firstDayOfCurrentMonth.ISOWeek()
+
+	weekInCurrentMonth := relevantWeek - firstDayOfCurrentMonthWeek
+
+	startColumns := []string{"C", "G", "K", "O", "S"}
+	startColumn := startColumns[weekInCurrentMonth-1]
+
+	writeRange := fmt.Sprintf("JUNE!%s%d", startColumn, rowIndex)
 
 	valuesRequest := &sheets.BatchUpdateValuesRequest{
 		ValueInputOption: "RAW",

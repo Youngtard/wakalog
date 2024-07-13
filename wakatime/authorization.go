@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-var authURL = "https://waksatime.com/oauth/authorize"
+var authURL = "https://wakatime.com/oauth/authorize"
 var tokenURL = "https://wakatime.com/oauth/token"
 
 func BeginAuthorization(ctx context.Context, tokenDest *string) error {
