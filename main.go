@@ -6,14 +6,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/99designs/keyring"
+	"github.com/Youngtard/wakalog/cmd/wakalog/command"
 	"github.com/Youngtard/wakalog/httpclient"
 	sheetsService "github.com/Youngtard/wakalog/sheets"
+	"github.com/Youngtard/wakalog/wakalog"
 	"github.com/Youngtard/wakalog/wakatime"
 	"github.com/icza/gox/timex"
 	"github.com/joho/godotenv"
+	"github.com/spf13/cobra"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -26,6 +30,10 @@ var sheetsApiScopes = []string{
 	"https://www.googleapis.com/auth/spreadsheets",
 }
 
+func startCli(ctx context.Context, app *wakalog.Application) (*cobra.Command, error) {
+	return command.NewRootCommand(app).ExecuteContextC(ctx)
+}
+
 func main() {
 
 	err := godotenv.Load()
@@ -35,6 +43,39 @@ func main() {
 	}
 
 	ctx := context.Background()
+
+	app, err := wakalog.NewApplication(ctx, "", nil)
+
+	if cmd, err := startCli(ctx, app); err != nil {
+		errorLog := log.New(os.Stderr, "", 0)
+
+		errorCode := 1
+
+		var flagError *wakalog.FlagError
+		var authError *wakalog.AuthError
+
+		if errors.As(err, &authError) {
+			errorLog.Println(err)
+		} else if errors.As(err, &flagError) || strings.HasPrefix(err.Error(), "unknown command ") {
+
+			errorLog.Println(err)
+
+			if !strings.HasSuffix(err.Error(), "\n") {
+				fmt.Fprintln(os.Stdout)
+			}
+
+			errorLog.Println(cmd.UsageString())
+			os.Exit(1)
+
+		} else {
+			errorLog.Printf("An error occurred (%d)\n", errorCode)
+			//TODO get error code
+			os.Exit(errorCode)
+		}
+
+	}
+
+	return
 
 	srv, err := setUpSheetsService(ctx)
 
@@ -75,7 +116,7 @@ func main() {
 
 	} else {
 
-		err := wakatime.GetAccessToken(&wakatimeAccessToken, wakatimeKeyring)
+		err := wakatime.GetAccessToken(&wakatimeAccessToken)
 
 		if err != nil {
 			log.Fatalf("Error retrieving wakatime access token: %v", err)
@@ -118,6 +159,14 @@ func main() {
 
 	engineersRange := "FEB!B:B"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, engineersRange).MajorDimension("COLUMNS").Do()
+
+	ssheet, _ := srv.Spreadsheets.Get(spreadsheetId).Do()
+
+	fmt.Println(ssheet.Sheets)
+
+	for _, s := range ssheet.Sheets {
+		fmt.Println(s.Properties.Title)
+	}
 
 	if err != nil {
 		log.Fatalf("Unable to retrieve data from sheet: %v", err)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/99designs/keyring"
+	"github.com/Youngtard/wakalog/pkg/store"
 )
 
 func StoreAccessToken(token string, ring keyring.Keyring) error {
@@ -20,12 +21,18 @@ func StoreAccessToken(token string, ring keyring.Keyring) error {
 
 }
 
-func GetAccessToken(tokenDest *string, ring keyring.Keyring) error {
+func GetAccessToken(tokenDest *string) error {
+
+	ring, err := store.Keyring()
+
+	if err != nil {
+		return err
+	}
 
 	item, err := ring.Get("wakatime_access_token")
 
 	if err != nil {
-		return fmt.Errorf("error retreiving wakatime access token")
+		return fmt.Errorf("error retreiving wakatime access token: %w", err)
 	}
 
 	*tokenDest = string(item.Data)

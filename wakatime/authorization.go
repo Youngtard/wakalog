@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/99designs/keyring"
 	"github.com/int128/oauth2cli"
 	"github.com/int128/oauth2cli/oauth2params"
 	"github.com/pkg/browser"
@@ -18,6 +19,36 @@ import (
 
 var authURL = "https://wakatime.com/oauth/authorize"
 var tokenURL = "https://wakatime.com/oauth/token"
+
+func Authorize(ctx context.Context) (string, error) {
+
+	wakatimeKeyring, err := keyring.Open(keyring.Config{
+		ServiceName: "wakalogs",
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	var accessToken string
+
+	err = BeginAuthorization(ctx, &accessToken)
+
+	if err != nil {
+		return "", fmt.Errorf("error authorizing wakatime: %v", err)
+	}
+
+	err = StoreAccessToken(accessToken, wakatimeKeyring)
+
+	if err != nil {
+
+		return "", fmt.Errorf("error storing wakatime token: %v", err)
+
+	}
+
+	return accessToken, nil
+
+}
 
 func BeginAuthorization(ctx context.Context, tokenDest *string) error {
 

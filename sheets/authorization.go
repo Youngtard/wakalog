@@ -4,10 +4,8 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -16,6 +14,7 @@ import (
 	"github.com/int128/oauth2cli/oauth2params"
 	"github.com/pkg/browser"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -28,12 +27,10 @@ func GetClient(ctx context.Context, config *oauth2.Config) (*http.Client, error)
 
 	var token *oauth2.Token
 
-	tokenPath := "token.json"
-
-	token, err := retrieveTokenFromFile(tokenPath)
+	token, err := RetrieveTokenFromFile()
 
 	if err != nil {
-		token, err = startAuthorization(ctx, config)
+		token, err = beginAuthorization(ctx)
 
 		if err != nil {
 
@@ -45,7 +42,7 @@ func GetClient(ctx context.Context, config *oauth2.Config) (*http.Client, error)
 
 	// TODO after 7 days / tokenExpiry + 7 days
 	if time.Now().After(token.Expiry) {
-		token, err = startAuthorization(ctx, config)
+		token, err = beginAuthorization(ctx)
 
 		if err != nil {
 
@@ -55,46 +52,56 @@ func GetClient(ctx context.Context, config *oauth2.Config) (*http.Client, error)
 
 	}
 
-	saveToken(tokenPath, token)
+	saveToken(token)
 
 	return config.Client(context.Background(), token), nil
 
 }
 
-// TODO token from keystring?
-func retrieveTokenFromFile(filePath string) (*oauth2.Token, error) {
-	tokenFile, err := os.Open(filePath)
+func NewClient() {
+
+}
+
+func GetConfig() (*oauth2.Config, error) {
+	b, err := os.ReadFile("credentials.json")
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to read client secret file: %v", err)
+
+	}
+
+	config, err := google.ConfigFromJSON(b, scopes...)
+
+	if err != nil {
+
+		return nil, fmt.Errorf("unable to parse client secret file to config: %v", err)
+	}
+
+	return config, nil
+}
+
+func Authorize(ctx context.Context) (*oauth2.Token, error) {
+
+	token, err := beginAuthorization(ctx)
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer tokenFile.Close()
+	saveToken(token)
 
-	tok := &oauth2.Token{}
+	return token, nil
 
-	err = json.NewDecoder(tokenFile).Decode(tok)
-
-	return tok, err
-
-}
-
-func saveToken(path string, token *oauth2.Token) {
-	fmt.Printf("Saving credential file to: %s\n", path)
-
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-
-	if err != nil {
-		log.Fatalf("Unable to cache oauth token: %v", err)
-	}
-
-	defer f.Close()
-
-	json.NewEncoder(f).Encode(token)
 }
 
 // TODO context timeout
-func startAuthorization(context context.Context, config *oauth2.Config) (*oauth2.Token, error) {
+func beginAuthorization(context context.Context) (*oauth2.Token, error) {
+
+	config, err := GetConfig()
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting configuration: %w", err)
+	}
 
 	var token *oauth2.Token
 
