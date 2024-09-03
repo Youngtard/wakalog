@@ -31,7 +31,7 @@ func handleWakaTimeError(resp *http.Response) error {
 	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading response body: %w", err)
 	}
 
 	wakatimeError := &WakaTimeError{Response: resp, StatusCode: resp.StatusCode}
@@ -40,7 +40,7 @@ func handleWakaTimeError(resp *http.Response) error {
 		err = json.Unmarshal(body, wakatimeError)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("error unmarshalling response body: %w", err)
 		}
 	}
 

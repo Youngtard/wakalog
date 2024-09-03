@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/Youngtard/wakalog/httpclient"
-	sheetsService "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakatime"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
@@ -23,13 +22,19 @@ func NewApplication(context context.Context, wakaTimeToken string, sheetsToken *
 	app := &Application{}
 
 	app.InitializeWakaTime(wakaTimeToken)
-	app.InitializeSheets(context, sheetsToken)
+	err := app.InitializeSheets(context, sheetsToken)
+
+	if err != nil {
+		return nil, fmt.Errorf("error initializing sheets service %w", err)
+	}
 	return app, nil
 
 }
 
 func (app *Application) InitializeWakaTime(token string) {
 
+	// TODO check if token is not empty
+	// TODO nil checks?
 	hc := httpclient.NewClient(nil).WithAuthToken(token)
 
 	wc := wakatime.NewClient(hc)
@@ -40,15 +45,9 @@ func (app *Application) InitializeWakaTime(token string) {
 
 func (app *Application) InitializeSheets(context context.Context, token *oauth2.Token) error {
 
-	config, err := sheetsService.GetConfig()
+	credentialsOption := option.WithCredentialsFile("service_account.json")
 
-	if err != nil {
-		return fmt.Errorf("error getting confifiguration: %w", err)
-	}
-
-	client := config.Client(context, token)
-
-	srv, err := sheets.NewService(context, option.WithHTTPClient(client))
+	srv, err := sheets.NewService(context, credentialsOption)
 
 	if err != nil {
 		return fmt.Errorf("error setting up sheets service: %w", err)

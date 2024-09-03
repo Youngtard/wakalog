@@ -46,6 +46,10 @@ func main() {
 
 	app, err := wakalog.NewApplication(ctx, "", nil)
 
+	if err != nil {
+		log.Fatal("Error initializing application")
+	}
+
 	if cmd, err := startCli(ctx, app); err != nil {
 		errorLog := log.New(os.Stderr, "", 0)
 

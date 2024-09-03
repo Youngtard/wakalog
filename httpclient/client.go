@@ -48,11 +48,16 @@ func (c *Client) WithAuthToken(token string) *Client {
 }
 
 func (c *Client) copy() *Client {
+
 	clone := Client{
-		client: c.client,
+		client: &http.Client{},
 	}
-	if clone.client == nil {
-		clone.client = http.DefaultClient
+
+	if c.client != nil {
+		clone.client.Transport = c.client.Transport
+		clone.client.CheckRedirect = c.client.CheckRedirect
+		clone.client.Jar = c.client.Jar
+		clone.client.Timeout = c.client.Timeout
 	}
 
 	return &clone
@@ -114,12 +119,16 @@ func (c *Client) processRequest(ctx context.Context, req *http.Request) (*http.R
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			return nil, fmt.Errorf("error making request")
+			return nil, fmt.Errorf("error making request: %w", err)
 		}
 
 	}
 
 	success := resp.StatusCode >= 200 && resp.StatusCode < 300
+
+	// todo remove
+	r, _ := io.ReadAll(resp.Body)
+	fmt.Println("body: ", string(r))
 
 	if !success {
 		return nil, handleWakaTimeError(resp)
