@@ -2,6 +2,7 @@ package wakatime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"time"
@@ -34,6 +35,12 @@ func (r *Client) GetSummaries(ctx context.Context, startTime, endTime time.Time)
 	_, err = r.httpclient.Get(ctx, u, values, summaries)
 
 	if err != nil {
+
+		var serverError *httpclient.ServerError
+
+		if errors.As(err, &serverError) {
+			return nil, handleWakaTimeError(serverError)
+		}
 		return nil, fmt.Errorf("error executing request: %w", err)
 	}
 

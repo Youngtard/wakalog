@@ -63,6 +63,17 @@ func (c *Client) copy() *Client {
 	return &clone
 }
 
+type ServerError struct {
+	Body       io.ReadCloser
+	StatusCode int
+}
+
+func (se *ServerError) Error() string {
+
+	return "unexpected status code"
+
+}
+
 func (c *Client) Get(ctx context.Context, urlPath string, params url.Values, v interface{}) (*http.Response, error) {
 	url, err := url.Parse(urlPath)
 
@@ -79,21 +90,21 @@ func (c *Client) Get(ctx context.Context, urlPath string, params url.Values, v i
 		return nil, err
 	}
 
-	res, err := c.processRequest(ctx, req)
+	resp, err := c.processRequest(ctx, req)
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	err = decodeResponse(res.Body, v)
+	err = decodeResponse(resp.Body, v)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	return resp, nil
 
 }
 
@@ -124,15 +135,10 @@ func (c *Client) processRequest(ctx context.Context, req *http.Request) (*http.R
 
 	}
 
-	success := resp.StatusCode >= 200 && resp.StatusCode < 300
-
-	// todo remove
-	r, _ := io.ReadAll(resp.Body)
-	fmt.Println("body: ", string(r))
+	success := resp.StatusCode >= 200 && resp.StatusCode < 400
 
 	if !success {
-		return nil, handleWakaTimeError(resp)
-
+		return nil, &ServerError{Body: resp.Body, StatusCode: resp.StatusCode}
 	}
 
 	return resp, nil

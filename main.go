@@ -57,6 +57,7 @@ func main() {
 
 		var flagError *wakalog.FlagError
 		var authError *wakalog.AuthError
+		var wakatimeError *wakatime.WakaTimeError
 
 		if errors.As(err, &authError) {
 			errorLog.Println(err)
@@ -71,9 +72,13 @@ func main() {
 			errorLog.Println(cmd.UsageString())
 			os.Exit(1)
 
+		} else if errors.As(err, &wakatimeError) {
+			errorCode = wakatimeError.StatusCode
+			errorLog.Printf("WakaTime Error: %s (%d)", wakatimeError, errorCode)
+			os.Exit(errorCode)
+
 		} else {
 			errorLog.Printf("An error occurred (%d)\n", errorCode)
-			//TODO get error code
 			os.Exit(errorCode)
 		}
 
