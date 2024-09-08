@@ -23,7 +23,7 @@ var tokenURL = "https://wakatime.com/oauth/token"
 func Authorize(ctx context.Context) (string, error) {
 
 	wakatimeKeyring, err := keyring.Open(keyring.Config{
-		ServiceName: "wakalogs",
+		ServiceName: "wakalog",
 	})
 
 	if err != nil {

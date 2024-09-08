@@ -8,7 +8,7 @@ import (
 
 func Keyring() (keyring.Keyring, error) {
 	ring, err := keyring.Open(keyring.Config{
-		ServiceName: "wakalogs",
+		ServiceName: "wakalog",
 	})
 
 	if err != nil {
