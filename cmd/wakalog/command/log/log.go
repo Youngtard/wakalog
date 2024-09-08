@@ -124,6 +124,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			now := time.Now()
 			var name string
 			var selectedSheet spreadsheet
 			var selectedWeek week
@@ -143,7 +144,10 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				spreadsheets = append(spreadsheets, spreadsheet(s.Properties.Title))
 			}
 
-			err = interact.Choice("Select a sheet to update", spreadsheets, &selectedSheet)
+			// Preselect current month
+			preselectedSheet := now.Month()
+
+			err = interact.Choice("Select a sheet to update", spreadsheets, &selectedSheet, int(preselectedSheet)-1)
 
 			if err != nil {
 				return fmt.Errorf("error generating sheet selection")
@@ -224,7 +228,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 			fmt.Println()
 
-			err = interact.Choice("Select a week to update", weeks, &selectedWeek)
+			err = interact.Choice("Select a week to update", weeks, &selectedWeek, 0)
 
 			if err != nil {
 				return fmt.Errorf("error generating week selection")

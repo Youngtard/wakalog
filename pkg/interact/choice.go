@@ -68,9 +68,9 @@ func (m choiceModel[T]) View() string {
 	return s.String()
 }
 
-func Choice[T fmt.Stringer](title string, choices []T, dest *T) error {
+func Choice[T fmt.Stringer](title string, choices []T, dest *T, cursor int) error {
 
-	p := tea.NewProgram(choiceModel[T]{title: title, choices: choices})
+	p := tea.NewProgram(choiceModel[T]{title: title, choices: choices, cursor: cursor})
 
 	m, err := p.Run()
 
