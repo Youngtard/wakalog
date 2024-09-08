@@ -19,21 +19,6 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-type spreadsheet string
-type week string
-
-func (c spreadsheet) String() string {
-
-	return string(c)
-
-}
-
-func (c week) String() string {
-
-	return string(c)
-
-}
-
 func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 	cmd := &cobra.Command{
@@ -125,8 +110,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var name string
-			var selectedSheet spreadsheet
-			var selectedWeek week
+			var relevantSheet string
 
 			sheetsService := app.Sheets
 
@@ -137,20 +121,16 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				return err
 			}
 
-			var spreadsheets []spreadsheet // spreadsheets representing months of the year
-			for _, s := range ssheet.Sheets {
-
-				spreadsheets = append(spreadsheets, spreadsheet(s.Properties.Title))
-			}
-
-			// Preselect relevant month
 			startDate, _ := getRelevantStartAndEndDate()
-			preselectedSheet := startDate.Month()
+			relevantMonth := startDate.Month()
 
-			err = interact.Choice("Select a sheet to update", spreadsheets, &selectedSheet, int(preselectedSheet)-1)
+			for i, s := range ssheet.Sheets {
 
-			if err != nil {
-				return fmt.Errorf("error generating sheet selection")
+				if i == int(relevantMonth)-1 {
+					relevantSheet = s.Properties.Title
+					break
+				}
+
 			}
 
 			// TODO Continue as <name>?
@@ -162,7 +142,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			}
 
 			/// Fetch names on sheet
-			namesRange := fmt.Sprintf("%s!B3:B", selectedSheet)
+			namesRange := fmt.Sprintf("%s!B3:B", relevantSheet)
 			resp, err := sheetsService.Spreadsheets.Values.Get(wakasheets.SpreadsheetId, namesRange).MajorDimension("COLUMNS").Do()
 
 			if err != nil {
@@ -197,44 +177,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				return nil
 			}
 
-			/// Fetch weeks and allow user select week to be updated
-			var weeks []week
-			weekRanges := []string{"C1:F1", "G1:J1", "K1:N1", "O1:R1"}
-
-			for _, v := range weekRanges {
-				weekRange := fmt.Sprintf("%s!%s", selectedSheet, v)
-
-				resp, err := sheetsService.Spreadsheets.Values.Get(wakasheets.SpreadsheetId, weekRange).MajorDimension("ROWS").Do()
-
-				if err != nil {
-					// TODO test errors
-					return err
-				}
-
-				for _, row := range resp.Values {
-
-					for _, v := range row {
-
-						weeks = append(weeks, week(v.(string)))
-					}
-				}
-
-			}
-
-			if len(weeks) == 0 {
-				fmt.Println("No data found.")
-				return nil
-			}
-
-			fmt.Println()
-
-			err = interact.Choice("Select a week to update", weeks, &selectedWeek, 0)
-
-			if err != nil {
-				return fmt.Errorf("error generating week selection")
-			}
-
-			err = updateSheet(cmd.Context(), app, string(selectedSheet), rowIndex)
+			err = updateSheet(cmd.Context(), app, relevantSheet, rowIndex)
 
 			if err != nil {
 				return fmt.Errorf("error updating sheet: %w", err)
