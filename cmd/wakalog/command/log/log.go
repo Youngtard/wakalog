@@ -285,7 +285,7 @@ func checkForSheetsToken() (*oauth2.Token, error) {
 	return token, nil
 }
 
-func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, rowIndex int) error {
+func getRelevantStartAndEndDate() (time.Time, time.Time) {
 
 	now := time.Now()
 
@@ -297,7 +297,7 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 	/// Relevant days to work with is working days of the week (Mon - Fri)
 	/// If it's weekend (Saturday, or Sunday), work with current week (Mon - Fri stats is available)
-	/// Else, 1 week needs to be offset from current week in order to work with last week's data
+	/// Else, 1 week needs to be offset from current week in order to work with last week's data as the current working week is not yet over
 
 	if dayOfWeek == 6 || dayOfWeek == 0 {
 		relevantWeekOffset = 0
@@ -311,23 +311,29 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 	startDate := timex.WeekStart(currentYear, relevantWeek)
 	endDate := startDate.AddDate(0, 0, 4)
 
-	summaries, err := app.WakaTime.GetSummaries(ctx, startDate, endDate)
+	return startDate, endDate
+
+}
+
+func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, rowIndex int) error {
+
+	startDate, endDate := getRelevantStartAndEndDate()
 
 	// TODO remove
 	fmt.Println(startDate)
 	fmt.Println(endDate)
 
+	summaries, err := app.WakaTime.GetSummaries(ctx, startDate, endDate)
+
 	if err != nil {
 		return fmt.Errorf("error getting summaries: %w", err)
 	}
 
-	firstDayOfCurrentMonth := time.Date(now.Year(), now.Month(), 1, 1, 1, 1, 1, time.UTC)
-	_, firstDayOfCurrentMonthWeek := firstDayOfCurrentMonth.ISOWeek()
+	startColumns := []string{"C", "G", "K", "O", "S"} // representing 5 possible weeks in a month
 
-	weekInCurrentMonth := relevantWeek - firstDayOfCurrentMonthWeek
+	relevantWeek := startDate.Day() / 7
 
-	startColumns := []string{"C", "G", "K", "O", "S"}
-	startColumn := startColumns[weekInCurrentMonth-1]
+	startColumn := startColumns[relevantWeek]
 
 	writeRange := fmt.Sprintf("%s!%s%d", sheet, startColumn, rowIndex)
 
