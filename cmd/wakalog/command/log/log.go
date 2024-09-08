@@ -128,19 +128,12 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			var selectedSheet spreadsheet
 			var selectedWeek week
 
-			// Continue as <name>?
-			err := interact.TextInput("Enter your name (as seen on the Google Sheets document)", &name)
-
-			if err != nil {
-				return fmt.Errorf("error generating text input")
-			}
-
 			sheetsService := app.Sheets
 
 			ssheet, err := sheetsService.Spreadsheets.Get(wakasheets.SpreadsheetId).Do()
 
 			if err != nil {
-				// TODO test errors
+				// TODO test errors and other errors
 				return err
 			}
 
@@ -156,8 +149,52 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				return fmt.Errorf("error generating sheet selection")
 			}
 
-			var weeks []week
+			// TODO Continue as <name>?
+			// TODO handle empty name
+			err = interact.TextInput("Enter your name (as seen on the Google Sheets document - case sensitive)", &name)
 
+			if err != nil {
+				return fmt.Errorf("error generating name input")
+			}
+
+			/// Fetch names on sheet
+			namesRange := fmt.Sprintf("%s!B3:B", selectedSheet)
+			resp, err := sheetsService.Spreadsheets.Values.Get(wakasheets.SpreadsheetId, namesRange).MajorDimension("COLUMNS").Do()
+
+			if err != nil {
+				return fmt.Errorf("error retrieving names on sheet")
+			}
+
+			var rowIndex int
+			var nameFound bool
+
+			/// Check if inputted name exists on sheet, if so, store row index
+			if len(resp.Values) == 0 {
+				fmt.Println("No data found.")
+				// TODO
+				return nil
+			} else {
+				for _, row := range resp.Values {
+					for i, v := range row {
+
+						v := v.(string)
+
+						if strings.TrimSpace(v) == strings.TrimSpace(name) {
+							nameFound = true
+							rowIndex = i + 3 // row cells start counting from 1 (so +1), then ignore first two rows (they are headers/don't contain user's data)
+						}
+					}
+				}
+			}
+
+			if !nameFound {
+				// TODO ask for name again
+				fmt.Println("Name not found on sheet")
+				return nil
+			}
+
+			/// Fetch weeks and allow user select week to be updated
+			var weeks []week
 			weekRanges := []string{"C1:F1", "G1:J1", "K1:N1", "O1:R1"}
 
 			for _, v := range weekRanges {
@@ -193,7 +230,15 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				return fmt.Errorf("error generating week selection")
 			}
 
-			return updateSheet(cmd.Context(), app, string(selectedSheet))
+			err = updateSheet(cmd.Context(), app, string(selectedSheet), rowIndex)
+
+			if err != nil {
+				return fmt.Errorf("error updating sheet: %w", err)
+			}
+
+			fmt.Println("Sheet updated successfully :)")
+
+			return nil
 
 		},
 	}
@@ -236,7 +281,7 @@ func checkForSheetsToken() (*oauth2.Token, error) {
 	return token, nil
 }
 
-func updateSheet(ctx context.Context, app *wakalog.Application, sheet string) error {
+func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, rowIndex int) error {
 
 	now := time.Now()
 
@@ -264,15 +309,13 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string) er
 
 	summaries, err := app.WakaTime.GetSummaries(ctx, startDate, endDate)
 
-	// todo remove
+	// TODO remove
 	fmt.Println(startDate)
 	fmt.Println(endDate)
 
 	if err != nil {
 		return fmt.Errorf("error getting summaries: %w", err)
 	}
-
-	var rowIndex int
 
 	firstDayOfCurrentMonth := time.Date(now.Year(), now.Month(), 1, 1, 1, 1, 1, time.UTC)
 	_, firstDayOfCurrentMonthWeek := firstDayOfCurrentMonth.ISOWeek()

@@ -78,6 +78,8 @@ func main() {
 			os.Exit(errorCode)
 
 		} else {
+			// TODO remove
+			fmt.Println(err)
 			errorLog.Printf("An error occurred (%d)\n", errorCode)
 			os.Exit(errorCode)
 		}
