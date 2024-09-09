@@ -39,7 +39,7 @@ archives:
 brews:
   - name: wakalog
     homepage: https://github.com/Youngtard/homebrew-wakalog
-    tap:
+    repository:
       owner: Youngtard
       name: homebrew-wakalog
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
