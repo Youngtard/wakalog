@@ -5,3 +5,4 @@ bin/
 *.pem
 *.db
 token.json
+service_account.json
