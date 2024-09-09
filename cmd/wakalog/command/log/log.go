@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"slices"
 	"strings"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakalog"
 	"github.com/Youngtard/wakalog/wakatime"
+	"github.com/charmbracelet/huh"
 	"github.com/icza/gox/timex"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
@@ -272,6 +275,47 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 		return fmt.Errorf("error getting summaries: %w", err)
 	}
 
+	var projectOptions []huh.Option[string]
+	var projects []string
+	var selectedProjects []string
+
+	// Loop over period/days e.g. Mon-Fri
+	for _, data := range summaries.Data {
+
+		for _, project := range data.Projects {
+
+			name := project.Name
+
+			// Get unique list of projects worked on during period
+			if !slices.Contains(projects, name) {
+				projects = append(projects, name)
+				projectOptions = append(projectOptions, huh.NewOption(name, name))
+			}
+
+		}
+	}
+
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewMultiSelect[string]().
+				Title("Select projects to get weekly activity from").
+				Options(
+					projectOptions...,
+				).
+				Value(&selectedProjects),
+		),
+	)
+
+	err = form.RunWithContext(ctx)
+
+	if err != nil {
+		return fmt.Errorf("error generating project options")
+	}
+
+	if len(selectedProjects) == 0 {
+		fmt.Println("No project selected. All projects will be used")
+	}
+
 	startColumns := []string{"C", "G", "K", "O", "S"} // representing 5 possible weeks in a month
 
 	relevantWeek := startDate.Day() / 7
@@ -286,7 +330,47 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 	var valueRange sheets.ValueRange
 
-	data := []interface{}{summaries.DailyAverage.Text, "", summaries.CumulativeTotal.Text}
+	var daysWorked int
+	var totalTimePerDay []time.Duration
+
+	// Loop over period/days e.g. Mon-Fri
+	for _, data := range summaries.Data {
+
+		for _, project := range data.Projects {
+
+			projectName := project.Name
+
+			if slices.Contains(selectedProjects, projectName) {
+
+				totalTime, _ := time.ParseDuration(fmt.Sprintf("%dh%dm%ds", project.Hours, project.Minutes, project.Seconds))
+
+				fmt.Println(totalTime)
+
+				totalTimePerDay = append(totalTimePerDay, totalTime)
+
+			}
+
+		}
+	}
+
+	var cummulativeTotalTime time.Duration
+
+	for _, totalTime := range totalTimePerDay {
+
+		// Skip days where user had no coding activity.
+		// Daily Average computation according to WakaTime ignores days of no activity
+		if totalTime <= time.Duration(0) {
+			break
+		}
+
+		daysWorked += 1
+		cummulativeTotalTime += totalTime
+
+	}
+
+	dailyAverage := cummulativeTotalTime.Hours() / float64(daysWorked)
+
+	data := []interface{}{time.Duration(dailyAverage * float64(time.Hour)).String(), "", cummulativeTotalTime.String()}
 	valueRange.Values = append(valueRange.Values, data)
 	valueRange.Range = writeRange
 

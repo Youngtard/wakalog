@@ -12,6 +12,7 @@ type Summaries struct {
 
 type SummariesData struct {
 	GrandTotal GrandTotal `json:"grand_total"`
+	Projects   []Project  `json:"projects"`
 }
 
 type GrandTotal struct {
@@ -21,6 +22,20 @@ type GrandTotal struct {
 	Digital      string  `json:"digital"`
 	Decimal      string  `json:"decimal"`
 	Text         string  `json:"text"`
+}
+
+type Project struct {
+	Name          string      `json:"name"`
+	TotalSeconds  float64     `json:"total_seconds"`
+	Digital       string      `json:"digital"`
+	Decimal       string      `json:"decimal"`
+	Text          string      `json:"text"`
+	Hours         int64       `json:"hours"`
+	Minutes       int64       `json:"minutes"`
+	Seconds       int64       `json:"seconds"`
+	Percent       float64     `json:"percent"`
+	MachineNameID *string     `json:"machine_name_id,omitempty"`
+	Color         interface{} `json:"color"`
 }
 
 type CumulativeTotal struct {
