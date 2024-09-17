@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Youngtard/wakalog/httpclient"
+	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakatime"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
@@ -45,9 +46,19 @@ func (app *Application) InitializeWakaTime(token string) {
 
 func (app *Application) InitializeSheets(context context.Context, token *oauth2.Token) error {
 
-	credentialsOption := option.WithCredentialsFile("service_account.json")
+	config, err := wakasheets.GetConfig()
 
-	srv, err := sheets.NewService(context, credentialsOption)
+	if err != nil {
+		return fmt.Errorf("error getting google config %w", err)
+	}
+
+	client, err := wakasheets.GetClient(context, config)
+
+	if err != nil {
+		return fmt.Errorf("error getting google client %w", err)
+	}
+
+	srv, err := sheets.NewService(context, option.WithHTTPClient(client))
 
 	if err != nil {
 		return fmt.Errorf("error setting up sheets service: %w", err)
