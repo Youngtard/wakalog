@@ -336,6 +336,8 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 	// Loop over period/days e.g. Mon-Fri
 	for _, data := range summaries.Data {
 
+		var totalTimeForDay time.Duration
+
 		for _, project := range data.Projects {
 
 			projectName := project.Name
@@ -346,11 +348,13 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 				fmt.Println(totalTime)
 
-				totalTimePerDay = append(totalTimePerDay, totalTime)
+				totalTimeForDay += totalTime
 
 			}
 
 		}
+
+		totalTimePerDay = append(totalTimePerDay, totalTimeForDay)
 	}
 
 	var cummulativeTotalTime time.Duration
