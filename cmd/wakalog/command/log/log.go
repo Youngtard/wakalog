@@ -314,6 +314,7 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 	if len(selectedProjects) == 0 {
 		fmt.Println("No project selected. All projects will be used")
+		selectedProjects = projects
 	}
 
 	startColumns := []string{"C", "G", "K", "O", "S"} // representing 5 possible weeks in a month
