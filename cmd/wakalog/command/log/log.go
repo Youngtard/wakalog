@@ -265,10 +265,6 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 	startDate, endDate := getRelevantStartAndEndDate()
 
-	// TODO remove
-	fmt.Println(startDate)
-	fmt.Println(endDate)
-
 	summaries, err := app.WakaTime.GetSummaries(ctx, startDate, endDate)
 
 	if err != nil {
@@ -346,8 +342,6 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 			if slices.Contains(selectedProjects, projectName) {
 
 				totalTime, _ := time.ParseDuration(fmt.Sprintf("%dh%dm%ds", project.Hours, project.Minutes, project.Seconds))
-
-				fmt.Println(totalTime)
 
 				totalTimeForDay += totalTime
 
