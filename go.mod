@@ -9,7 +9,6 @@ require (
 	github.com/charmbracelet/huh v0.6.0
 	github.com/icza/gox v0.0.0-20230924165045-adcb03233bb5
 	github.com/int128/oauth2cli v1.14.0
-	github.com/joho/godotenv v1.5.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/savioxavier/termlink v1.4.1
 	github.com/spf13/cobra v1.8.1

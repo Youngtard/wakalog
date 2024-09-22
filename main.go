@@ -11,7 +11,6 @@ import (
 	"github.com/Youngtard/wakalog/cmd/wakalog/command"
 	"github.com/Youngtard/wakalog/wakalog"
 	"github.com/Youngtard/wakalog/wakatime"
-	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -20,12 +19,6 @@ func startCli(ctx context.Context, app *wakalog.Application) (*cobra.Command, er
 }
 
 func main() {
-
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 
 	ctx := context.Background()
 

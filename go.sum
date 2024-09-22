@@ -173,8 +173,6 @@ github.com/int128/listener v1.1.0 h1:2Jb41DWLpkQ3I9bIdBzO8H/tNwMvyl/OBZWtCV5Pjuw
 github.com/int128/listener v1.1.0/go.mod h1:68WkmTN8PQtLzc9DucIaagAKeGVyMnyyKIkW4Xn47UA=
 github.com/int128/oauth2cli v1.14.0 h1:r63NoO10ybUXIXUQxih8WOmt5HQpJubdTmhWh22B9VE=
 github.com/int128/oauth2cli v1.14.0/go.mod h1:LIoVAzgAsS2tDDBc8yopkcgY5oZR0+MJAeECkCwtxhA=
-github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
-github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
