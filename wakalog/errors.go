@@ -4,8 +4,8 @@ import "errors"
 
 var ErrGeneric = errors.New("an error occurred")
 
-// ErrWakaTimeTokenNotFound is returned when WakaTime token is not found in storage (Keyring)
-var ErrWakaTimeTokenNotFound = errors.New("wakatime token not found")
+// ErrWakaTimeAPIKeyNotFound is returned when WakaTime API Key is not found in storage (Keyring)
+var ErrWakaTimeAPIKeyNotFound = errors.New("wakatime API key not found")
 
 var ErrSheetsTokenNotFound = errors.New("sheets token not found")
 

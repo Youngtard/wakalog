@@ -29,6 +29,7 @@ func main() {
 
 	ctx := context.Background()
 
+	// TODO pass key and token
 	app, err := wakalog.NewApplication(ctx, "", nil)
 
 	if err != nil {

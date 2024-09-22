@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"encoding/base64"
+
 	"github.com/Youngtard/wakalog/httpclient"
 	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakatime"
@@ -18,11 +20,11 @@ type Application struct {
 	Sheets *sheets.Service
 }
 
-func NewApplication(context context.Context, wakaTimeToken string, sheetsToken *oauth2.Token) (*Application, error) {
+func NewApplication(context context.Context, wakaTimeAPIKey string, sheetsToken *oauth2.Token) (*Application, error) {
 
 	app := &Application{}
 
-	app.InitializeWakaTime(wakaTimeToken)
+	app.InitializeWakaTime(wakaTimeAPIKey)
 	err := app.InitializeSheets(context, sheetsToken)
 
 	if err != nil {
@@ -32,11 +34,14 @@ func NewApplication(context context.Context, wakaTimeToken string, sheetsToken *
 
 }
 
-func (app *Application) InitializeWakaTime(token string) {
+func (app *Application) InitializeWakaTime(apiKey string) {
 
-	// TODO check if token is not empty
+	// TODO check if apiKey is not empty
 	// TODO nil checks?
-	hc := httpclient.NewClient(nil).WithAuthToken(token)
+
+	encodedKey := base64.StdEncoding.EncodeToString([]byte(apiKey))
+
+	hc := httpclient.NewClient(nil).WithBasicAuth(encodedKey)
 
 	wc := wakatime.NewClient(hc)
 

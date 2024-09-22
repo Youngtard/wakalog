@@ -32,33 +32,22 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
-			var wakatimeToken string
+			var wakatimeAPIKey string
 			var sheetsToken *oauth2.Token
 
-			wakatimeToken, err := checkForWakaTimeToken()
+			wakatimeAPIKey, err := checkForWakaTimeAPIKey()
 
 			if err != nil {
-				if errors.Is(err, wakalog.ErrWakaTimeTokenNotFound) {
+				if errors.Is(err, wakalog.ErrWakaTimeAPIKeyNotFound) {
 
-					value, err := cmdutil.PromptForConfirmation(cmd.Context(), "You need to authenticate your WakaTime account in order to proceed. Proceed with authentication?")
+					wakatimeAPIKey, err = wakatime.Authorize(ctx)
 
 					if err != nil {
-						return err
-					}
-
-					if value {
-						wakatimeToken, err = wakatime.Authorize(ctx)
-
-						if err != nil {
-							return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with WakaTime")}
-						}
-
-					} else {
-						return &wakalog.AuthError{Err: fmt.Errorf("unable to log. Authentication with WakaTime is required")}
+						return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with WakaTime")}
 					}
 
 				} else {
-					return err
+					return fmt.Errorf("error checking for wakatime api key: %w", err)
 				}
 			}
 
@@ -100,7 +89,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 			}
 
-			app.InitializeWakaTime(wakatimeToken)
+			app.InitializeWakaTime(wakatimeAPIKey)
 
 			err = app.InitializeSheets(ctx, sheetsToken)
 
@@ -196,28 +185,28 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 	return cmd
 }
 
-func checkForWakaTimeToken() (string, error) {
+func checkForWakaTimeAPIKey() (string, error) {
 
-	var token string
+	var apiKey string
 
-	if err := wakatime.GetAccessToken(&token); err != nil {
+	if err := wakatime.GetAPIKey(&apiKey); err != nil {
 
 		if errors.Is(err, keyring.ErrKeyNotFound) {
-			return "", wakalog.ErrWakaTimeTokenNotFound
+			return "", wakalog.ErrWakaTimeAPIKeyNotFound
 		}
 
 		return "", wakalog.ErrGeneric
 
 	} else {
 
-		if len(strings.TrimSpace(token)) == 0 {
+		if len(strings.TrimSpace(apiKey)) == 0 {
 
-			return "", wakalog.ErrWakaTimeTokenNotFound
+			return "", wakalog.ErrWakaTimeAPIKeyNotFound
 
 		}
 	}
 
-	return token, nil
+	return apiKey, nil
 
 }
 

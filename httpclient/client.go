@@ -47,6 +47,23 @@ func (c *Client) WithAuthToken(token string) *Client {
 	return c2
 }
 
+func (c *Client) WithBasicAuth(value string) *Client {
+
+	c2 := c.copy()
+	transport := c2.client.Transport
+	if transport == nil {
+		transport = http.DefaultTransport
+	}
+	c2.client.Transport = roundTripperFunc(
+		func(req *http.Request) (*http.Response, error) {
+			req = req.Clone(req.Context())
+			req.Header.Set("Authorization", fmt.Sprintf("Basic %s", value))
+			return transport.RoundTrip(req)
+		},
+	)
+	return c2
+}
+
 func (c *Client) copy() *Client {
 
 	clone := Client{
