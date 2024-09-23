@@ -76,22 +76,17 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				}
 			}
 
-			// fmt.Println(sheetsToken.Expiry.Local().AddDate(0, 0, 7).Local().String())
+			// TODO no need to reauthorize after n days because refresh token doesn't expire?
+			if time.Now().After(sheetsToken.Expiry.AddDate(0, 0, 6)) {
+				sheetsToken, err = wakasheets.Authorize(ctx)
 
-			// return nil
+				if err != nil {
 
-			// TODO after 7 days / tokenExpiry + 7 days
-			// if time.Now().After(sheetsToken.Expiry.AddDate(0, 0, 7)) {
-			// 	fmt.Println("uhh yeah")
-			// 	sheetsToken, err = wakasheets.Authorize(ctx)
+					return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with Google Sheets: %w", err)}
 
-			// 	if err != nil {
+				}
 
-			// 		return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with Google Sheets")}
-
-			// 	}
-
-			// }
+			}
 
 			app.InitializeWakaTime(wakatimeAPIKey)
 

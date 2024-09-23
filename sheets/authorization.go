@@ -42,8 +42,8 @@ func GetClient(ctx context.Context, config *oauth2.Config) (*http.Client, error)
 
 	}
 
-	// TODO after 7 days / tokenExpiry + 7 days
-	if time.Now().After(token.Expiry) {
+	// TODO no need to reauthorize after n days because refresh token doesn't expire?
+	if time.Now().After(token.Expiry.AddDate(0, 0, 6)) {
 		token, err = beginAuthorization(ctx)
 
 		if err != nil {
