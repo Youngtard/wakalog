@@ -69,7 +69,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 
-			var name string
+			var username string
 			var relevantSheet string
 
 			sheetsService := app.Sheets
@@ -93,15 +93,47 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 			}
 
+			/// Fetch names on sheet
+			namesRange := fmt.Sprintf("%s!B3:B", relevantSheet)
+			resp, err := sheetsService.Spreadsheets.Values.Get(wakasheets.SpreadsheetId, namesRange).MajorDimension("COLUMNS").Do()
+
+			if err != nil {
+				return fmt.Errorf("error retrieving usernames on sheet: %w", err)
+			}
+
+			var namesOnSheet []string
+
+			if len(resp.Values) == 0 {
+				fmt.Println("No username data found.")
+				return nil
+			} else {
+				for _, row := range resp.Values {
+					for _, v := range row {
+
+						v := v.(string)
+
+						name := strings.TrimSpace(v)
+
+						namesOnSheet = append(namesOnSheet, name)
+
+					}
+				}
+			}
+
 			// TODO Continue as <name>?
 			form := huh.NewForm(
 				huh.NewGroup(
 					huh.NewInput().
 						Title("Enter your name (as seen on the Google Sheets document - case sensitive)").
-						Value(&name).
-						Validate(func(str string) error {
-							if len(str) == 0 {
+						Value(&username).
+						Suggestions(namesOnSheet).
+						Validate(func(value string) error {
+							if len(value) == 0 {
 								return fmt.Errorf("Your name is required to proceed.")
+							}
+
+							if !slices.Contains(namesOnSheet, value) {
+								return fmt.Errorf("Name not found on sheet.")
 							}
 							return nil
 						}).WithTheme(huh.ThemeBase()),
@@ -112,43 +144,15 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 			if err != nil {
 				return fmt.Errorf("error getting username: %w", err)
-
-			}
-
-			/// Fetch names on sheet
-			namesRange := fmt.Sprintf("%s!B3:B", relevantSheet)
-			resp, err := sheetsService.Spreadsheets.Values.Get(wakasheets.SpreadsheetId, namesRange).MajorDimension("COLUMNS").Do()
-
-			if err != nil {
-				return fmt.Errorf("error retrieving usernames on sheet: %w", err)
 			}
 
 			var rowIndex int
-			var nameFound bool
 
-			/// Check if inputted name exists on sheet, if so, store row index
-			if len(resp.Values) == 0 {
-				fmt.Println("No username data found.")
-				// TODO
-				return nil
-			} else {
-				for _, row := range resp.Values {
-					for i, v := range row {
-
-						v := v.(string)
-
-						if strings.TrimSpace(v) == strings.TrimSpace(name) {
-							nameFound = true
-							rowIndex = i + 3 // row cells start counting from 1 (so +1), then ignore first two rows (they are headers/don't contain user's data)
-						}
-					}
+			for i, name := range namesOnSheet {
+				if name == username {
+					rowIndex = i + 3 // row cells start counting from 1 (so +1), then ignore first two rows (they are headers/don't contain user's data)
+					break
 				}
-			}
-
-			if !nameFound {
-				// TODO ask for name again
-				fmt.Println("Name not found on sheet")
-				return nil
 			}
 
 			err = updateSheet(ctx, app, relevantSheet, rowIndex)
