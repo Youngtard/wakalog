@@ -101,7 +101,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 						Value(&name).
 						Validate(func(str string) error {
 							if len(str) == 0 {
-								return errors.New("Your name is required to proceed.")
+								return fmt.Errorf("Your name is required to proceed.")
 							}
 							return nil
 						}).WithTheme(huh.ThemeBase()),

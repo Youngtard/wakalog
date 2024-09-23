@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Youngtard/wakalog/pkg/interact"
+	"github.com/charmbracelet/huh"
 	"github.com/savioxavier/termlink"
 )
 
@@ -24,10 +24,25 @@ func Authorize(ctx context.Context) (string, error) {
 		apiKeyPrompt = prompt
 	}
 
-	err := interact.TextInput(apiKeyPrompt, &apiKey)
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title(apiKeyPrompt).
+				Value(&apiKey).
+				Validate(func(str string) error {
+					if len(str) == 0 {
+						return fmt.Errorf("API Key is required to proceed.")
+					}
+					return nil
+				}).WithTheme(huh.ThemeBase()),
+		),
+	)
+
+	err := form.RunWithContext(ctx)
 
 	if err != nil {
 		return "", fmt.Errorf("error generating api key input: %w", err)
+
 	}
 
 	err = StoreAPIKey(apiKey)
