@@ -1,8 +1,11 @@
 module github.com/Youngtard/wakalog
 
-go 1.21
+go 1.22
+
+toolchain go1.23.1
 
 require (
+	github.com/boltdb/bolt v1.3.1
 	github.com/charmbracelet/huh v0.6.0
 	github.com/icza/gox v0.0.0-20230924165045-adcb03233bb5
 	github.com/int128/oauth2cli v1.14.0
@@ -10,6 +13,7 @@ require (
 	github.com/savioxavier/termlink v1.4.1
 	github.com/spf13/cobra v1.8.1
 	github.com/zalando/go-keyring v0.2.5
+	go.etcd.io/bbolt v1.3.11
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/sync v0.8.0
 	google.golang.org/api v0.192.0

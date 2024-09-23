@@ -8,12 +8,14 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Youngtard/wakalog/cmd/wakalog/command"
 	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakalog"
 	"github.com/Youngtard/wakalog/wakatime"
 	"github.com/spf13/cobra"
+	bolt "go.etcd.io/bbolt"
 )
 
 //go:embed credentials.json
@@ -27,7 +29,12 @@ func main() {
 	wakasheets.GoogleCredentials = googleCredentials
 	ctx := context.Background()
 
-	app := wakalog.NewApplication(ctx)
+	db, err := openDb()
+	if err != nil {
+		log.Fatal("Error opening db: %w", err)
+	}
+
+	app := wakalog.NewApplication(ctx, db)
 
 	if cmd, err := startCli(ctx, app); err != nil {
 		errorLog := log.New(os.Stderr, "", 0)
@@ -62,5 +69,19 @@ func main() {
 		}
 
 	}
+
+}
+
+func openDb() (*bolt.DB, error) {
+
+	db, err := bolt.Open("wakalog.db", 0600, &bolt.Options{Timeout: 5 * time.Second})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	return db, nil
 
 }

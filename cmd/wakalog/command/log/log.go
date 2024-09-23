@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Youngtard/wakalog/pkg/cmdutil"
 	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakalog"
 	"github.com/Youngtard/wakalog/wakatime"
@@ -17,6 +18,7 @@ import (
 	"github.com/icza/gox/timex"
 	"github.com/spf13/cobra"
 	"github.com/zalando/go-keyring"
+	bolt "go.etcd.io/bbolt"
 	"google.golang.org/api/sheets/v4"
 )
 
@@ -120,31 +122,47 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				}
 			}
 
-			// TODO Continue as <name>?
-			form := huh.NewForm(
-				huh.NewGroup(
-					huh.NewInput().
-						Title("Enter your name (as seen on the Google Sheets document - case sensitive)").
-						Placeholder("Enter Name...").
-						Value(&username).
-						Suggestions(namesOnSheet).
-						Validate(func(value string) error {
-							if len(value) == 0 {
-								return fmt.Errorf("Your name is required to proceed.")
-							}
+			err = app.DB.View(func(tx *bolt.Tx) error {
+				b := tx.Bucket([]byte("wakalog"))
+				if b == nil {
+					return fmt.Errorf("error getting db bucket: %w", err)
+				}
 
-							if !slices.Contains(namesOnSheet, value) {
-								return fmt.Errorf("Name not found on sheet.")
-							}
-							return nil
-						}).WithTheme(huh.ThemeBase()),
-				),
-			)
+				username = string(b.Get([]byte("username")))
 
-			err = form.RunWithContext(ctx)
+				fmt.Println(username)
+				return nil
+			})
 
 			if err != nil {
-				return fmt.Errorf("error getting username: %w", err)
+				return err
+			}
+
+			if len(username) != 0 {
+
+				value, err := cmdutil.PromptForConfirmation(ctx, fmt.Sprintf("Continue as %s?", username))
+
+				if err != nil {
+					return fmt.Errorf("error generating confirmation prompt: %w", err)
+				}
+
+				if !value {
+
+					err = promptForName(ctx, app, &username, namesOnSheet)
+
+					if err != nil {
+						return fmt.Errorf("error generating username: %w", err)
+					}
+
+				}
+
+			} else {
+
+				err = promptForName(ctx, app, &username, namesOnSheet)
+
+				if err != nil {
+					return fmt.Errorf("error generating username: %w", err)
+				}
 			}
 
 			var rowIndex int
@@ -170,6 +188,57 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 	}
 
 	return cmd
+}
+
+func promptForName(ctx context.Context, app *wakalog.Application, username *string, namesOnSheet []string) error {
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Title("Enter your name (as seen on the Google Sheets document - case sensitive)").
+				Placeholder("Enter Name...").
+				Value(username).
+				Suggestions(namesOnSheet).
+				Validate(func(value string) error {
+					if len(value) == 0 {
+						return fmt.Errorf("Your name is required to proceed.")
+					}
+
+					if !slices.Contains(namesOnSheet, value) {
+						return fmt.Errorf("Name not found on sheet.")
+					}
+					return nil
+				}).WithTheme(huh.ThemeBase()),
+		),
+	)
+
+	err := form.RunWithContext(ctx)
+
+	if err != nil {
+		return fmt.Errorf("error getting username: %w", err)
+	}
+
+	err = app.DB.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("wakalog"))
+
+		if err != nil {
+			return err
+		}
+
+		err = b.Put([]byte("username"), []byte(*username))
+
+		if err != nil {
+			return fmt.Errorf("error saving username: %w", err)
+		}
+
+		return nil
+
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func checkForWakaTimeAPIKey() (string, error) {

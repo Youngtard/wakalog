@@ -9,6 +9,7 @@ import (
 
 	"github.com/Youngtard/wakalog/httpclient"
 	"github.com/Youngtard/wakalog/wakatime"
+	bolt "go.etcd.io/bbolt"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
@@ -17,11 +18,12 @@ type Application struct {
 	WakaTime *wakatime.Client
 	// TODO have a wrapper? conflicting with project sheets package
 	Sheets *sheets.Service
+	DB     *bolt.DB
 }
 
-func NewApplication(context context.Context) *Application {
+func NewApplication(context context.Context, db *bolt.DB) *Application {
 
-	app := &Application{}
+	app := &Application{DB: db}
 
 	return app
 
