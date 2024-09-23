@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Youngtard/wakalog/pkg/cmdutil"
-	"github.com/Youngtard/wakalog/pkg/interact"
 	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakalog"
 	"github.com/Youngtard/wakalog/wakatime"
@@ -131,8 +130,21 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			}
 
 			// TODO Continue as <name>?
-			// TODO handle empty name
-			err = interact.TextInput("Enter your name (as seen on the Google Sheets document - case sensitive)", &name)
+			form := huh.NewForm(
+				huh.NewGroup(
+					huh.NewInput().
+						Title("Enter your name (as seen on the Google Sheets document - case sensitive)").
+						Value(&name).
+						Validate(func(str string) error {
+							if len(str) == 0 {
+								return errors.New("Your name is required to proceed.")
+							}
+							return nil
+						}).WithTheme(huh.ThemeBase()),
+				),
+			)
+
+			err = form.RunWithContext(cmd.Context())
 
 			if err != nil {
 				return fmt.Errorf("error generating name input")
