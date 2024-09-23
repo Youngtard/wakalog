@@ -25,11 +25,17 @@ var scopes = []string{
 	"https://www.googleapis.com/auth/spreadsheets",
 }
 
-func GetClient(ctx context.Context, config *oauth2.Config) (*http.Client, error) {
+func GetClient(ctx context.Context) (*http.Client, error) {
+
+	config, err := getConfig()
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting google config %w", err)
+	}
 
 	var token *oauth2.Token
 
-	token, err := RetrieveTokenFromFile()
+	token, err = retrieveTokenFromFile()
 
 	if err != nil {
 		token, err = beginAuthorization(ctx)
@@ -54,17 +60,14 @@ func GetClient(ctx context.Context, config *oauth2.Config) (*http.Client, error)
 
 	}
 
+	// TODO no need to save if token already exists?
 	saveToken(token)
 
-	return config.Client(context.Background(), token), nil
+	return config.Client(ctx, token), nil
 
 }
 
-func NewClient() {
-
-}
-
-func GetConfig() (*oauth2.Config, error) {
+func getConfig() (*oauth2.Config, error) {
 	credentials, err := GoogleCredentials.ReadFile("credentials.json")
 	if err != nil {
 		return nil, fmt.Errorf("unable to read client secret file: %v", err)
@@ -80,24 +83,10 @@ func GetConfig() (*oauth2.Config, error) {
 	return config, nil
 }
 
-func Authorize(ctx context.Context) (*oauth2.Token, error) {
-
-	token, err := beginAuthorization(ctx)
-
-	if err != nil {
-		return nil, err
-	}
-
-	saveToken(token)
-
-	return token, nil
-
-}
-
 // TODO context timeout
 func beginAuthorization(context context.Context) (*oauth2.Token, error) {
 
-	config, err := GetConfig()
+	config, err := getConfig()
 
 	if err != nil {
 		return nil, fmt.Errorf("error getting configuration: %w", err)

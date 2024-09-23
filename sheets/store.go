@@ -11,7 +11,7 @@ import (
 var tokenPath = "token.json"
 
 // TODO token from keystring?
-func RetrieveTokenFromFile() (*oauth2.Token, error) {
+func retrieveTokenFromFile() (*oauth2.Token, error) {
 
 	tokenFile, err := os.Open(tokenPath)
 

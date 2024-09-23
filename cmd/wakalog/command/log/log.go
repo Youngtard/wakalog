@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"slices"
 	"strings"
 	"time"
 
-	"github.com/Youngtard/wakalog/pkg/cmdutil"
 	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakalog"
 	"github.com/Youngtard/wakalog/wakatime"
@@ -17,7 +17,6 @@ import (
 	"github.com/icza/gox/timex"
 	"github.com/spf13/cobra"
 	"github.com/zalando/go-keyring"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/sheets/v4"
 )
 
@@ -32,7 +31,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			ctx := cmd.Context()
 
 			var wakatimeAPIKey string
-			var sheetsToken *oauth2.Token
+			var sheetsClient *http.Client
 
 			wakatimeAPIKey, err := checkForWakaTimeAPIKey()
 
@@ -50,47 +49,15 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				}
 			}
 
-			sheetsToken, err = checkForSheetsToken()
+			sheetsClient, err = wakasheets.GetClient(ctx)
 
 			if err != nil {
-				if errors.Is(err, wakalog.ErrSheetsTokenNotFound) {
-
-					value, err := cmdutil.PromptForConfirmation(cmd.Context(), "You need to authenticate your Google Sheets account in order to proceed. Proceed with authentication?")
-
-					if err != nil {
-						return err
-					}
-
-					if value {
-						sheetsToken, err = wakasheets.Authorize(ctx)
-
-						if err != nil {
-							return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with Google Sheets")}
-						}
-					} else {
-						return &wakalog.AuthError{Err: fmt.Errorf("unable to log. Authentication with Google Sheets is required")}
-					}
-
-				} else {
-					return err
-				}
-			}
-
-			// TODO no need to reauthorize after n days because refresh token doesn't expire?
-			if time.Now().After(sheetsToken.Expiry.AddDate(0, 0, 6)) {
-				sheetsToken, err = wakasheets.Authorize(ctx)
-
-				if err != nil {
-
-					return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with Google Sheets: %w", err)}
-
-				}
-
+				return fmt.Errorf("error getting google client %w", err)
 			}
 
 			app.InitializeWakaTime(wakatimeAPIKey)
 
-			err = app.InitializeSheets(ctx, sheetsToken)
+			err = app.InitializeSheets(ctx, sheetsClient)
 
 			if err != nil {
 				return fmt.Errorf("error initializing sheets service %w", err)
@@ -220,16 +187,6 @@ func checkForWakaTimeAPIKey() (string, error) {
 
 	return apiKey, nil
 
-}
-
-func checkForSheetsToken() (*oauth2.Token, error) {
-	token, err := wakasheets.RetrieveTokenFromFile()
-
-	if err != nil {
-		return nil, wakalog.ErrSheetsTokenNotFound
-	}
-
-	return token, nil
 }
 
 func getRelevantStartAndEndDate() (time.Time, time.Time) {

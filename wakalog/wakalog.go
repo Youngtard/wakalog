@@ -3,13 +3,12 @@ package wakalog
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"encoding/base64"
 
 	"github.com/Youngtard/wakalog/httpclient"
-	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakatime"
-	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
@@ -43,19 +42,7 @@ func (app *Application) InitializeWakaTime(apiKey string) {
 
 }
 
-func (app *Application) InitializeSheets(context context.Context, token *oauth2.Token) error {
-
-	config, err := wakasheets.GetConfig()
-
-	if err != nil {
-		return fmt.Errorf("error getting google config %w", err)
-	}
-
-	client, err := wakasheets.GetClient(context, config)
-
-	if err != nil {
-		return fmt.Errorf("error getting google client %w", err)
-	}
+func (app *Application) InitializeSheets(context context.Context, client *http.Client) error {
 
 	srv, err := sheets.NewService(context, option.WithHTTPClient(client))
 
