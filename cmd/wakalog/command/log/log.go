@@ -15,6 +15,7 @@ import (
 	"github.com/Youngtard/wakalog/wakatime"
 	"github.com/charmbracelet/huh"
 	"github.com/icza/gox/timex"
+	"github.com/savioxavier/termlink"
 	"github.com/spf13/cobra"
 	"github.com/zalando/go-keyring"
 	"google.golang.org/api/sheets/v4"
@@ -71,6 +72,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 			var username string
 			var relevantSheet string
+			var relevantSheetId int64
 
 			sheetsService := app.Sheets
 
@@ -87,6 +89,8 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			for i, s := range ssheet.Sheets {
 
 				if i == int(relevantMonth)-1 {
+
+					relevantSheetId = s.Properties.SheetId
 					relevantSheet = s.Properties.Title
 					break
 				}
@@ -156,13 +160,15 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				}
 			}
 
-			err = updateSheet(ctx, app, relevantSheet, rowIndex)
+			err = updateSheet(ctx, app, relevantSheet, rowIndex, relevantSheetId)
 
 			if err != nil {
 				return fmt.Errorf("error updating sheet: %w", err)
 			}
 
-			fmt.Println("Sheet updated successfully :)")
+			linkToSheet := fmt.Sprintf("https://docs.google.com/spreadsheets/d/%s/edit?gid=%d#gid=%d", wakasheets.SpreadsheetId, relevantSheetId, relevantSheetId)
+
+			fmt.Printf("Sheet updated successfully :)\nView sheet %s.\n", termlink.ColorLink("here", linkToSheet, "blue"))
 
 			return nil
 
@@ -227,7 +233,7 @@ func getRelevantStartAndEndDate() (time.Time, time.Time) {
 
 }
 
-func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, rowIndex int) error {
+func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, rowIndex int, sheetId int64) error {
 
 	startDate, endDate := getRelevantStartAndEndDate()
 
