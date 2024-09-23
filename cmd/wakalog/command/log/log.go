@@ -263,7 +263,13 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 				Options(
 					projectOptions...,
 				).
-				Value(&selectedProjects),
+				Value(&selectedProjects).Validate(func(options []string) error {
+				if len(options) == 0 {
+					return fmt.Errorf("Select a project (using x or spacebar) to proceed.")
+				}
+
+				return nil
+			}),
 		),
 	)
 
@@ -271,11 +277,6 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 	if err != nil {
 		return fmt.Errorf("error generating project options: %w", err)
-	}
-
-	if len(selectedProjects) == 0 {
-		fmt.Println("No project selected. All projects will be used")
-		selectedProjects = projects
 	}
 
 	startColumns := []string{"C", "G", "K", "O", "S"} // representing 5 possible weeks in a month
