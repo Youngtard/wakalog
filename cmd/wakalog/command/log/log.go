@@ -336,7 +336,7 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 	dailyAverage := cummulativeTotalTime.Hours() / float64(daysWorked)
 
-	data := []interface{}{time.Duration(dailyAverage * float64(time.Hour)).String(), "", cummulativeTotalTime.String()}
+	data := []interface{}{time.Duration(dailyAverage * float64(time.Hour)).Round(time.Second).String(), "", cummulativeTotalTime.Round(time.Second).String()}
 	valueRange.Values = append(valueRange.Values, data)
 	valueRange.Range = writeRange
 
