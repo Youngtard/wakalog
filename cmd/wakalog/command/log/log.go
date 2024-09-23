@@ -296,9 +296,11 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 	var daysWorked int
 	var totalTimePerDay []time.Duration
+	var mostActiveDay int
+	var mostActiveDuration time.Duration
 
 	// Loop over period/days e.g. Mon-Fri
-	for _, data := range summaries.Data {
+	for i, data := range summaries.Data {
 
 		var totalTimeForDay time.Duration
 
@@ -314,6 +316,16 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 			}
 
+		}
+
+		if i == 0 {
+			mostActiveDay = i
+			mostActiveDuration = totalTimeForDay
+		} else {
+			if totalTimeForDay > mostActiveDuration {
+				mostActiveDay = i
+				mostActiveDuration = totalTimeForDay
+			}
 		}
 
 		totalTimePerDay = append(totalTimePerDay, totalTimeForDay)
@@ -336,7 +348,7 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 
 	dailyAverage := cummulativeTotalTime.Hours() / float64(daysWorked)
 
-	data := []interface{}{time.Duration(dailyAverage * float64(time.Hour)).Round(time.Second).String(), "", cummulativeTotalTime.Round(time.Second).String()}
+	data := []interface{}{time.Duration(dailyAverage * float64(time.Hour)).Round(time.Second).String(), startDate.AddDate(0, 0, mostActiveDay).Format("Mon 1 Jan"), cummulativeTotalTime.Round(time.Second).String()}
 	valueRange.Values = append(valueRange.Values, data)
 	valueRange.Range = writeRange
 
