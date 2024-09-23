@@ -27,14 +27,14 @@ func Authorize(ctx context.Context) (string, error) {
 	err := interact.TextInput(apiKeyPrompt, &apiKey)
 
 	if err != nil {
-		return "", fmt.Errorf("error generating api key input")
+		return "", fmt.Errorf("error generating api key input: %w", err)
 	}
 
 	err = StoreAPIKey(apiKey)
 
 	if err != nil {
 
-		return "", fmt.Errorf("error storing wakatime api key: %v", err)
+		return "", fmt.Errorf("error storing wakatime api key: %w", err)
 
 	}
 

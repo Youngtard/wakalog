@@ -75,7 +75,7 @@ func Choice[T fmt.Stringer](title string, choices []T, dest *T, cursor int) erro
 	m, err := p.Run()
 
 	if err != nil {
-		return fmt.Errorf("error running prompt: %v", err)
+		return fmt.Errorf("error running prompt: %w", err)
 	}
 
 	if m, ok := m.(choiceModel[T]); ok {

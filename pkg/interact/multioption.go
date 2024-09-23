@@ -88,7 +88,7 @@ package interact
 // 	_, err := p.Run()
 
 // 	if err != nil {
-// 		return fmt.Errorf("error running prompt: %v", err)
+// 		return fmt.Errorf("error running prompt: %w", err)
 // 	}
 
 // 	return nil

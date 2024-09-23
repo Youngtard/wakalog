@@ -95,7 +95,7 @@ func (c *Client) Get(ctx context.Context, urlPath string, params url.Values, v i
 	url, err := url.Parse(urlPath)
 
 	if err != nil {
-		return nil, fmt.Errorf("error parsing url path")
+		return nil, fmt.Errorf("error parsing url path: %w", err)
 	}
 	url.Query()
 
@@ -129,7 +129,7 @@ func (c *Client) createRequest(method string, url string, body io.Reader) (*http
 	req, err := http.NewRequest(method, url, body)
 
 	if err != nil {
-		return nil, fmt.Errorf("error creating request")
+		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
 	return req, nil

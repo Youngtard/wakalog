@@ -41,7 +41,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 					wakatimeAPIKey, err = wakatime.Authorize(ctx)
 
 					if err != nil {
-						return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with WakaTime")}
+						return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with WakaTime: %w", err)}
 					}
 
 				} else {
@@ -52,7 +52,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			sheetsClient, err = wakasheets.GetClient(ctx)
 
 			if err != nil {
-				return fmt.Errorf("error getting google client %w", err)
+				return fmt.Errorf("error getting google client: %w", err)
 			}
 
 			app.InitializeWakaTime(wakatimeAPIKey)
@@ -60,13 +60,15 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			err = app.InitializeSheets(ctx, sheetsClient)
 
 			if err != nil {
-				return fmt.Errorf("error initializing sheets service %w", err)
+				return fmt.Errorf("error initializing sheets service: %w", err)
 			}
 
 			return nil
 
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+
 			var name string
 			var relevantSheet string
 
@@ -106,10 +108,11 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				),
 			)
 
-			err = form.RunWithContext(cmd.Context())
+			err = form.RunWithContext(ctx)
 
 			if err != nil {
-				return fmt.Errorf("error generating name input")
+				return fmt.Errorf("error getting username: %w", err)
+
 			}
 
 			/// Fetch names on sheet
@@ -117,7 +120,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			resp, err := sheetsService.Spreadsheets.Values.Get(wakasheets.SpreadsheetId, namesRange).MajorDimension("COLUMNS").Do()
 
 			if err != nil {
-				return fmt.Errorf("error retrieving names on sheet")
+				return fmt.Errorf("error retrieving usernames on sheet: %w", err)
 			}
 
 			var rowIndex int
@@ -125,7 +128,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 			/// Check if inputted name exists on sheet, if so, store row index
 			if len(resp.Values) == 0 {
-				fmt.Println("No data found.")
+				fmt.Println("No username data found.")
 				// TODO
 				return nil
 			} else {
@@ -148,7 +151,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				return nil
 			}
 
-			err = updateSheet(cmd.Context(), app, relevantSheet, rowIndex)
+			err = updateSheet(ctx, app, relevantSheet, rowIndex)
 
 			if err != nil {
 				return fmt.Errorf("error updating sheet: %w", err)
@@ -263,7 +266,7 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 	err = form.RunWithContext(ctx)
 
 	if err != nil {
-		return fmt.Errorf("error generating project options")
+		return fmt.Errorf("error generating project options: %w", err)
 	}
 
 	if len(selectedProjects) == 0 {

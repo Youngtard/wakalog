@@ -53,13 +53,11 @@ func main() {
 
 		} else if errors.As(err, &wakatimeError) {
 			errorCode = wakatimeError.StatusCode
-			errorLog.Printf("WakaTime Error: %s (%d)", wakatimeError, errorCode)
+			errorLog.Printf("WakaTime Error: %s (%d)\n", wakatimeError, errorCode)
 			os.Exit(errorCode)
 
 		} else {
-			// TODO remove
-			fmt.Println(err)
-			errorLog.Printf("An error occurred (%d)\n", errorCode)
+			errorLog.Printf("An error occurred: %s (%d)\n", err, errorCode)
 			os.Exit(errorCode)
 		}
 

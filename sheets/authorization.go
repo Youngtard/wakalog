@@ -30,7 +30,7 @@ func GetClient(ctx context.Context) (*http.Client, error) {
 	config, err := getConfig()
 
 	if err != nil {
-		return nil, fmt.Errorf("error getting google config %w", err)
+		return nil, fmt.Errorf("error getting google config: %w", err)
 	}
 
 	var token *oauth2.Token
@@ -42,7 +42,7 @@ func GetClient(ctx context.Context) (*http.Client, error) {
 
 		if err != nil {
 
-			return nil, fmt.Errorf("error authorizing with sheets api: %v", err)
+			return nil, fmt.Errorf("error authorizing with sheets api: %w", err)
 
 		}
 
@@ -54,7 +54,7 @@ func GetClient(ctx context.Context) (*http.Client, error) {
 
 		if err != nil {
 
-			return nil, fmt.Errorf("error authorizing with sheets api: %v", err)
+			return nil, fmt.Errorf("error authorizing with sheets api: %w", err)
 
 		}
 
@@ -70,14 +70,14 @@ func GetClient(ctx context.Context) (*http.Client, error) {
 func getConfig() (*oauth2.Config, error) {
 	credentials, err := GoogleCredentials.ReadFile("credentials.json")
 	if err != nil {
-		return nil, fmt.Errorf("unable to read client secret file: %v", err)
+		return nil, fmt.Errorf("unable to read client secret file: %w", err)
 	}
 
 	config, err := google.ConfigFromJSON(credentials, scopes...)
 
 	if err != nil {
 
-		return nil, fmt.Errorf("unable to parse client secret file to config: %v", err)
+		return nil, fmt.Errorf("unable to parse client secret file to config: %w", err)
 	}
 
 	return config, nil
@@ -106,14 +106,14 @@ func beginAuthorization(context context.Context) (*oauth2.Token, error) {
 	}
 
 	if clientSecret == "" {
-		return nil, fmt.Errorf("sheet Client Secret is required")
+		return nil, fmt.Errorf("sheets Client Secret is required")
 
 	}
 
 	pkce, err := oauth2params.NewPKCE()
 
 	if err != nil {
-		return nil, fmt.Errorf("error: %v", err)
+		return nil, fmt.Errorf("error: %w", err)
 	}
 
 	ready := make(chan string, 1)
@@ -123,7 +123,7 @@ func beginAuthorization(context context.Context) (*oauth2.Token, error) {
 	nonceBytes := make([]byte, 64)
 	_, err = io.ReadFull(rand.Reader, nonceBytes)
 	if err != nil {
-		return nil, fmt.Errorf("error generating random state parameter: %v", err)
+		return nil, fmt.Errorf("error generating random state parameter: %w", err)
 	}
 	randomStateValue := base64.URLEncoding.EncodeToString(nonceBytes)
 
@@ -152,7 +152,7 @@ func beginAuthorization(context context.Context) (*oauth2.Token, error) {
 		case url := <-ready:
 			if err := browser.OpenURL(url); err != nil {
 
-				return fmt.Errorf("could not open the browser: %v", err)
+				return fmt.Errorf("could not open the browser: %w", err)
 			}
 			return nil
 		case <-ctx.Done():
@@ -171,7 +171,7 @@ func beginAuthorization(context context.Context) (*oauth2.Token, error) {
 
 	if err := eg.Wait(); err != nil {
 
-		return nil, fmt.Errorf("authorization error: %v", err)
+		return nil, fmt.Errorf("authorization error: %w", err)
 	}
 
 	if token != nil {

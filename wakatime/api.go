@@ -23,7 +23,7 @@ func (r *Client) GetSummaries(ctx context.Context, startTime, endTime time.Time)
 	u, err := httpclient.ParseURL(baseURL, "/users/current/summaries")
 
 	if err != nil {
-		return nil, fmt.Errorf("error parsing url: %v", err)
+		return nil, fmt.Errorf("error parsing url: %w", err)
 	}
 
 	summaries := new(Summaries)

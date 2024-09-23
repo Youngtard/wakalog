@@ -67,7 +67,7 @@ func TextInput(title string, dest *string) error {
 	m, err := p.Run()
 
 	if err != nil {
-		return fmt.Errorf("error running prompt: %v", err)
+		return fmt.Errorf("error running prompt: %w", err)
 	}
 
 	if m, ok := m.(textInputModel); ok {
