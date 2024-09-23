@@ -125,6 +125,7 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				huh.NewGroup(
 					huh.NewInput().
 						Title("Enter your name (as seen on the Google Sheets document - case sensitive)").
+						Placeholder("Enter Name...").
 						Value(&username).
 						Suggestions(namesOnSheet).
 						Validate(func(value string) error {

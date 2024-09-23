@@ -28,6 +28,7 @@ func Authorize(ctx context.Context) (string, error) {
 		huh.NewGroup(
 			huh.NewInput().
 				Title(apiKeyPrompt).
+				Placeholder("Enter API Key...").
 				Value(&apiKey).
 				Validate(func(str string) error {
 					if len(str) == 0 {
