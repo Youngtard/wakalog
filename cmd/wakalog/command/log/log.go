@@ -21,6 +21,8 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
+var errNoProjects = errors.New("no projects")
+
 func NewLogCommand(app *wakalog.Application) *cobra.Command {
 
 	cmd := &cobra.Command{
@@ -163,6 +165,11 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 			err = updateSheet(ctx, app, relevantSheet, rowIndex, relevantSheetId)
 
 			if err != nil {
+
+				if errors.Is(err, errNoProjects) {
+					fmt.Println("No projects data found for period. Don't have WakaTime? Install WakaTime plugin on your IDE to get started.")
+					return nil
+				}
 				return fmt.Errorf("error updating sheet: %w", err)
 			}
 
@@ -261,6 +268,12 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 			}
 
 		}
+	}
+
+	if len(projectOptions) == 0 {
+
+		return errNoProjects
+
 	}
 
 	form := huh.NewForm(
