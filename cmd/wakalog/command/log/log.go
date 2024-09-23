@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/99designs/keyring"
 	"github.com/Youngtard/wakalog/pkg/cmdutil"
 	"github.com/Youngtard/wakalog/pkg/interact"
 	wakasheets "github.com/Youngtard/wakalog/sheets"
@@ -18,6 +17,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/icza/gox/timex"
 	"github.com/spf13/cobra"
+	"github.com/zalando/go-keyring"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/sheets/v4"
 )
@@ -77,17 +77,22 @@ func NewLogCommand(app *wakalog.Application) *cobra.Command {
 				}
 			}
 
+			// fmt.Println(sheetsToken.Expiry.Local().AddDate(0, 0, 7).Local().String())
+
+			// return nil
+
 			// TODO after 7 days / tokenExpiry + 7 days
-			if time.Now().After(sheetsToken.Expiry) {
-				sheetsToken, err = wakasheets.Authorize(ctx)
+			// if time.Now().After(sheetsToken.Expiry.AddDate(0, 0, 7)) {
+			// 	fmt.Println("uhh yeah")
+			// 	sheetsToken, err = wakasheets.Authorize(ctx)
 
-				if err != nil {
+			// 	if err != nil {
 
-					return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with Google Sheets")}
+			// 		return &wakalog.AuthError{Err: fmt.Errorf("error authenticating with Google Sheets")}
 
-				}
+			// 	}
 
-			}
+			// }
 
 			app.InitializeWakaTime(wakatimeAPIKey)
 
@@ -191,7 +196,7 @@ func checkForWakaTimeAPIKey() (string, error) {
 
 	if err := wakatime.GetAPIKey(&apiKey); err != nil {
 
-		if errors.Is(err, keyring.ErrKeyNotFound) {
+		if errors.Is(err, keyring.ErrNotFound) {
 			return "", wakalog.ErrWakaTimeAPIKeyNotFound
 		}
 

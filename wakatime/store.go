@@ -3,15 +3,15 @@ package wakatime
 import (
 	"fmt"
 
-	"github.com/99designs/keyring"
-	"github.com/Youngtard/wakalog/pkg/store"
+	"github.com/zalando/go-keyring"
 )
 
-func StoreAPIKey(apiKey string, ring keyring.Keyring) error {
+var serviceName string = "wakalog"
+var userName string = "wakatime_api_key"
 
-	item := keyring.Item{Key: "wakatime_api_key", Data: []byte(apiKey)}
+func StoreAPIKey(apiKey string) error {
 
-	err := ring.Set(item)
+	err := keyring.Set(serviceName, userName, apiKey)
 
 	if err != nil {
 		return err
@@ -23,19 +23,13 @@ func StoreAPIKey(apiKey string, ring keyring.Keyring) error {
 
 func GetAPIKey(apiKeyDest *string) error {
 
-	ring, err := store.Keyring()
-
-	if err != nil {
-		return err
-	}
-
-	item, err := ring.Get("wakatime_api_key")
+	apiKey, err := keyring.Get(serviceName, userName)
 
 	if err != nil {
 		return fmt.Errorf("error retreiving wakatime api key: %w", err)
 	}
 
-	*apiKeyDest = string(item.Data)
+	*apiKeyDest = apiKey
 
 	return nil
 
