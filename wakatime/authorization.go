@@ -3,6 +3,7 @@ package wakatime
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/savioxavier/termlink"
@@ -45,6 +46,8 @@ func Authorize(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("error generating api key input: %w", err)
 
 	}
+
+	apiKey = strings.TrimSpace(apiKey)
 
 	err = StoreAPIKey(apiKey)
 
