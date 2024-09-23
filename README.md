@@ -34,3 +34,9 @@ Projects I learnt one or two from
 * [Docker CLI](https://github.com/docker/cli)
 * [GitHub gh CLI](https://github.com/cli/cli)
 * [Go GitHub client](https://github.com/google/go-github)
+
+## Roadmap
+* Write Tests
+* ```version``` command. Notify about new version on usage
+* Persist some data e.g. username
+* ...
