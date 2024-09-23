@@ -20,17 +20,11 @@ type Application struct {
 	Sheets *sheets.Service
 }
 
-func NewApplication(context context.Context, wakaTimeAPIKey string, sheetsToken *oauth2.Token) (*Application, error) {
+func NewApplication(context context.Context) *Application {
 
 	app := &Application{}
 
-	app.InitializeWakaTime(wakaTimeAPIKey)
-	err := app.InitializeSheets(context, sheetsToken)
-
-	if err != nil {
-		return nil, fmt.Errorf("error initializing sheets service %w", err)
-	}
-	return app, nil
+	return app
 
 }
 

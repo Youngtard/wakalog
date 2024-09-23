@@ -27,12 +27,7 @@ func main() {
 	wakasheets.GoogleCredentials = googleCredentials
 	ctx := context.Background()
 
-	// TODO pass key and token
-	app, err := wakalog.NewApplication(ctx, "", nil)
-
-	if err != nil {
-		log.Fatalf("Error initializing application: %s", err)
-	}
+	app := wakalog.NewApplication(ctx)
 
 	if cmd, err := startCli(ctx, app); err != nil {
 		errorLog := log.New(os.Stderr, "", 0)
