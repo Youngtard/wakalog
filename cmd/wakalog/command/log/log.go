@@ -324,7 +324,7 @@ func updateSheet(ctx context.Context, app *wakalog.Application, sheet string, ro
 		// Skip days where user had no coding activity.
 		// Daily Average computation according to WakaTime ignores days of no activity
 		if totalTime <= time.Duration(0) {
-			break
+			continue
 		}
 
 		daysWorked += 1
