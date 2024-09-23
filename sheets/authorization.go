@@ -3,11 +3,11 @@ package sheets
 import (
 	"context"
 	"crypto/rand"
+	"embed"
 	"encoding/base64"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/int128/oauth2cli"
@@ -17,6 +17,8 @@ import (
 	"golang.org/x/oauth2/google"
 	"golang.org/x/sync/errgroup"
 )
+
+var GoogleCredentials embed.FS
 
 var scopes = []string{
 	"https://www.googleapis.com/auth/spreadsheets.readonly",
@@ -63,14 +65,12 @@ func NewClient() {
 }
 
 func GetConfig() (*oauth2.Config, error) {
-	b, err := os.ReadFile("credentials.json")
-
+	credentials, err := GoogleCredentials.ReadFile("credentials.json")
 	if err != nil {
 		return nil, fmt.Errorf("unable to read client secret file: %v", err)
-
 	}
 
-	config, err := google.ConfigFromJSON(b, scopes...)
+	config, err := google.ConfigFromJSON(credentials, scopes...)
 
 	if err != nil {
 

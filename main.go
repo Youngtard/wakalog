@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"log"
@@ -9,24 +10,28 @@ import (
 	"strings"
 
 	"github.com/Youngtard/wakalog/cmd/wakalog/command"
+	wakasheets "github.com/Youngtard/wakalog/sheets"
 	"github.com/Youngtard/wakalog/wakalog"
 	"github.com/Youngtard/wakalog/wakatime"
 	"github.com/spf13/cobra"
 )
+
+//go:embed credentials.json
+var googleCredentials embed.FS
 
 func startCli(ctx context.Context, app *wakalog.Application) (*cobra.Command, error) {
 	return command.NewRootCommand(app).ExecuteContextC(ctx)
 }
 
 func main() {
-
+	wakasheets.GoogleCredentials = googleCredentials
 	ctx := context.Background()
 
 	// TODO pass key and token
 	app, err := wakalog.NewApplication(ctx, "", nil)
 
 	if err != nil {
-		log.Fatal("Error initializing application")
+		log.Fatalf("Error initializing application: %s", err)
 	}
 
 	if cmd, err := startCli(ctx, app); err != nil {
