@@ -54,6 +54,11 @@ func main() {
 		} else if errors.As(err, &wakatimeError) {
 			errorCode = wakatimeError.StatusCode
 			errorLog.Printf("WakaTime Error: %s (%d)\n", wakatimeError, errorCode)
+
+			if errorCode == 401 {
+				fmt.Println("Use <wakalog auth> to reauthenticate your WakaTime account")
+			}
+
 			os.Exit(errorCode)
 
 		} else {
